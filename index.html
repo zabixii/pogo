@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Generator</h1>
+        <div class="upload-container">
+            <label for="backgroundImage">Upload Background Image:</label>
+            <input type="file" id="backgroundImage" accept="image/*">
+        </div>
+        <div class="upload-container">
+            <label for="codeList">Upload Code List:</label>
+            <input type="file" id="codeList" accept=".txt">
+        </div>
+        <button id="generateButton">Generate QR Codes</button>
+        <div id="outputImages"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
