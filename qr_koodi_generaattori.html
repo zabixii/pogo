@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code and Text Image Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1f1f1f; /* Dark background color */
+            color: #ddd; /* Light text color */
+            display: flex;
+            flex-direction: column; /* Display content vertically */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #fff; /* White heading text color */
+        }
+
+        p {
+            color: #ccc; /* Light text color for paragraph */
+        }
+
+        textarea {
+            margin-bottom: 20px;
+            background-color: #333; /* Darker text area background color */
+            color: #ddd; /* Light text color */
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            resize: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff; /* Primary button color */
+            color: #fff; /* White button text color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s ease;
+margin-bottom: 30px;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker primary button color on hover */
+        }
+
+        #images {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #images div {
+            margin: 10px;
+            background-color: #333; /* Darker container background color */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Improved box shadow */
+        }
+
+        canvas {
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Improved image shadow */
+            transition: transform 0.3s ease;
+        }
+
+        canvas:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code and Text Image Generator</h1>
+    <p>Enter one code per line:</p>
+    <textarea id="inputCodes" rows="5" cols="50"></textarea>
+    <button onclick="generateImages()">Generate Images</button>
+    <button id="downloadQRBtn" onclick="downloadQR()">Download QR Codes</button>
+    <button id="downloadTextBtn" onclick="downloadTextImages()">Download Text Images</button>
+    <button id="downloadBothBtn" onclick="downloadBoth()">Download Both</button>
+    <div id="images"></div>
+
+    <script>
+        var imagesData = [];
+
+        function generateImages() {
+            var inputCodes = document.getElementById('inputCodes').value.split('\n');
+            var imagesDiv = document.getElementById('images');
+            imagesDiv.innerHTML = '';
+
+            imagesData = []; // Clear previous data
+
+            inputCodes.forEach(function(code) {
+                if (code.trim() !== '') {
+                    var imageDiv = document.createElement('div');
+
+                    // Generate QR Code
+                    var qrCodeDiv = document.createElement('div');
+                    var passcodeURL = 'https://store.pokemongolive.com/offer-redemption?passcode=' + encodeURIComponent(code.trim());
+                    var qrCode = new QRCode(qrCodeDiv, {
+                        text: passcodeURL,
+                        width: 200,
+                        height: 200
+                    });
+                    imageDiv.appendChild(qrCodeDiv);
+
+                    // Generate Text Image
+                    var textCanvas = document.createElement('canvas');
+                    textCanvas.width = 300;
+                    textCanvas.height = 100;
+                    var textContext = textCanvas.getContext('2d');
+
+                    // Draw white background behind text
+                    textContext.font = '24px Arial';
+                    var textWidth = textContext.measureText(code.trim()).width;
+                    var textX = (textCanvas.width - textWidth) / 2;
+                    var textY = textCanvas.height / 2;
+                    textContext.fillStyle = '#ffffff'; // White background
+                    textContext.fillRect(textX - 5, textY - 15, textWidth + 10, 30);
+                    
+                    // Draw black text
+                    textContext.fillStyle = '#000000'; // Black text
+                    textContext.textAlign = 'center';
+                    textContext.textBaseline = 'middle';
+                    textContext.fillText(code.trim(), textX + textWidth / 2, textY);
+                    imageDiv.appendChild(textCanvas);
+
+                    imagesDiv.appendChild(imageDiv);
+
+                    // Store image data for download
+                    var qrCodeDataURL = qrCodeDiv.getElementsByTagName('canvas')[0].toDataURL();
+                    var textImageDataURL = textCanvas.toDataURL();
+                    imagesData.push({ qrCodeDataURL: qrCodeDataURL, textImageDataURL: textImageDataURL, code: code.trim() });
+                }
+            });
+        }
+
+        function downloadQR() {
+            var qrZip = new JSZip();
+            imagesData.forEach(function(imageData) {
+                var qrImg = imageData.qrCodeDataURL.split(',')[1];
+                qrZip.file('qr_code_' + imageData.code + '.png', qrImg, { base64: true });
+            });
+            qrZip.generateAsync({ type: "blob" })
+                .then(function(content) {
+                    saveAs(content, 'qrcodes.zip');
+                });
+        }
+
+        function downloadTextImages() {
+            var textZip = new JSZip();
+            imagesData.forEach(function(imageData) {
+                var textImg = imageData.textImageDataURL.split(',')[1];
+                textZip.file('text_image_' + imageData.code + '.png', textImg, { base64: true });
+            });
+            textZip.generateAsync({ type: "blob" })
+                .then(function(content) {
+                    saveAs(content, 'textimages.zip');
+                });
+        }
+
+        function downloadBoth() {
+            downloadQR();
+            setTimeout(downloadTextImages, 10); // Start downloadTextImages after 10 seconds
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</body>
+</html>
